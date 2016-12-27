@@ -16,19 +16,6 @@ Installation
 
 * Find the plugin at dovecot/target/lib/dovecot/lib18_scrambler_plugin.so.
 
-Tests
------
-
-* Ensure the [ruby version manager](http://rvm.io) is installed.
-
-* Install ruby version 2.1.x with command `rvm install 2.1`.
-
-* Install the bundler gem with `gem install bundler`.
-
-* Install the gem bundle with `bundle install`.
-
-All tests are written with RSpec and can be run with `make spec-all` or `bundle exec rake spec:integration`
-
 Configuration
 -------------
 
