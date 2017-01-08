@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SCRAMBLER_COMMON_H
 
 #include <openssl/evp.h>
+#include <stdint.h>
 
 // Defines
 
@@ -72,9 +73,12 @@ void scrambler_initialize(void);
 const char *scrambler_read_line_fd(pool_t pool, int file_descriptor);
 
 const char *scrambler_hash_password(
-    const char *password,
-    const char *salt,
-    unsigned int iterations);
+    const char * const password,
+    const char * const salt,
+    const uint64_t N,
+    const uint64_t r,
+    const uint64_t p,
+    const uint32_t keylen);
 
 const EVP_CIPHER *scrambler_cipher(enum packages package);
 

@@ -4,7 +4,7 @@ Dovecot encryption plugin
 Requirements
 ------------
 
-* Ensure GCC and the header files for libcrypto (OpenSSL) and libxcrypt are installed.
+* Ensure GCC and the header files for libcrypto (OpenSSL) and libsodium are installed.
 
 Installation
 ------------
@@ -32,10 +32,42 @@ In order to run, the plugin needs the following configuration values (via the do
 
 * `scrambler_private_key_salt` The salt of the hashed password that has been used to encrypt the private key.
 
-* `scrambler_private_key_iterations` The number of iterations of the hashed password that has been used to
-  encrypt the private key.
+* `userdb_scrambler_N` The scrypt parameter N used to derive the hashed password that has been used to encrypt  
+  the private key.
 
-A configuration example can be found at `dovecot/configuration/dovecot-sql.conf.ext.erb`.
+* `userdb_scrambler_r` The scrypt parameter r used to derive the hashed password that has been used to encrypt  
+  the private key.
+
+* `userdb_scrambler_p` The scrypt parameter p used to derive the hashed password that has been used to encrypt  
+  the private key.
+
+* `userdb_scrambler_keylen` The length of the hashed password that has been used to encrypt the private key.
+
+Example
+-------
+TODO config/passwd-generator
+openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:8192 -aes128 -pass stdin -out markus@mjott.pem
+openssl rsa -outform pem -pubout -in markus@mjott.pem 
+openssl rsa -outform pem -aes128 -passout stdin -in markus@mjott.pem
+CREATE TABLE `users` (
+	`id`	INTEGER NOT NULL,
+	`username`	VARCHAR(255) NOT NULL,
+	`domain`	VARCHAR(255) NOT NULL,
+	`password`	TEXT,
+	PRIMARY KEY(id)
+);
+CREATE TABLE "keys" (
+	`userid`	INTEGER,
+	`enabled`	INTEGER NOT NULL,
+	`scrypt_N`	NUMERIC NOT NULL,
+	`scrypt_r`	INTEGER NOT NULL,
+	`scrypt_p`	INTEGER NOT NULL,
+	`scrypt_keylen`	INTEGER NOT NULL,
+	`scrypt_salt`	TEXT NOT NULL,
+	`public_key`	TEXT NOT NULL,
+	`private_key`	TEXT NOT NULL,
+	FOREIGN KEY(`userid`) REFERENCES users ( id )
+)
 
 Migration
 ---------
