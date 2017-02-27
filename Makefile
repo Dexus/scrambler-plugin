@@ -22,8 +22,8 @@ CFLAGS=-std=gnu99 \
 	-Wall -W -Wmissing-prototypes -Wmissing-declarations -Wpointer-arith -Wchar-subscripts -Wformat=2 \
 	-Wbad-function-cast -fno-builtin-strftime -Wstrict-aliasing=2 -Wl,-z,relro,-z,now \
 	-fPIC -fstack-check -ftrapv -DPIC -D_FORTIFY_SOURCE=2 -DHAVE_CONFIG_H \
-	-I$(DOVECOT_INCLUDE_DIR)
-LDFLAGS=-gs -shared -lxcrypt -lcrypto -rdynamic -Wl,-soname,lib18_scrambler_plugin.so.1
+	-I$(DOVECOT_INCLUDE_DIR) $(shell pkg-config --cflags libsodium)
+LDFLAGS=-gs -shared $(shell pkg-config --libs libsodium) -lcrypto -rdynamic -Wl,-soname,lib18_scrambler_plugin.so.1
 
 ifeq ($(DEBUG), 1)
 	CFLAGS+=-DDEBUG_STREAMS -g

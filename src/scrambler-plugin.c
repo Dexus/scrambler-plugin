@@ -82,12 +82,18 @@ static const char *scrambler_get_pem_string_setting(struct mail_user *user, cons
 				return NULL;
 
 		scrambler_unescape_pem(value);
+
 		return value;
 }
 
 static unsigned int scrambler_get_integer_setting(struct mail_user *user, const char *name) {
     const char *value = scrambler_get_string_setting(user, name);
     return value == NULL ? 0 : atoi(value);
+}
+
+static unsigned long scrambler_get_longint_setting(struct mail_user *user, const char *name) {
+    const char *value = scrambler_get_string_setting(user, name);
+    return value == NULL ? 0 : atol(value);
 }
 
 static EVP_PKEY *scrambler_get_pem_key_setting(struct mail_user *user, const char *name) {
@@ -114,18 +120,39 @@ static void scrambler_mail_user_created(struct mail_user *user) {
     unsigned int plain_password_fd = scrambler_get_integer_setting(user, "scrambler_plain_password_fd");
   	const char *private_key = scrambler_get_pem_string_setting(user, "scrambler_private_key");
     const char *private_key_salt = scrambler_get_string_setting(user, "scrambler_private_key_salt");
-    unsigned int private_key_iterations = scrambler_get_integer_setting(user, "scrambler_private_key_iterations");
+    unsigned long scrypt_N = scrambler_get_longint_setting(user, "scrambler_N");
+    unsigned long scrypt_r = scrambler_get_longint_setting(user, "scrambler_r");
+    unsigned long scrypt_p = scrambler_get_longint_setting(user, "scrambler_p");
+    unsigned int keylen = scrambler_get_integer_setting(user, "scrambler_keylen");
 
     if (plain_password == NULL && plain_password_fd != 0) {
         plain_password = scrambler_read_line_fd(user->pool, plain_password_fd);
     }
 
     if (plain_password != NULL && private_key != NULL && private_key_salt != NULL) {
-        const char *hashed_password = scrambler_hash_password(plain_password, private_key_salt, private_key_iterations);
-        suser->private_key = scrambler_pem_read_encrypted_private_key(private_key, hashed_password);
-        if (suser->private_key == NULL) {
+        const char * hashed_password = scrambler_hash_password(
+                                            plain_password,
+                                            private_key_salt,
+                                            scrypt_N,
+                                            scrypt_r,
+                                            scrypt_p,
+                                            keylen
+                                        );
+
+        if (hashed_password != NULL) {
+            suser->private_key = scrambler_pem_read_encrypted_private_key(private_key, hashed_password);
+
+            free((void *) hashed_password);
+
+            if (suser->private_key == NULL) {
+                user->error = p_strdup_printf(user->pool,
+                    "Failed to load and decrypt the private key. May caused by an invalid password.");
+            }
+        } else {
             user->error = p_strdup_printf(user->pool,
-                "Failed to load and decrypt the private key. May caused by an invalid password.");
+                "Failed to derive decryption key. May be caused by wrong parameters.");
+
+            suser->private_key = NULL;
         }
     } else {
         suser->private_key = NULL;
