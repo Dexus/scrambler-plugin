@@ -46,6 +46,7 @@ In order to run, the plugin needs the following configuration values (via the do
 Example
 -------
 TODO config/passwd-generator
+```
 openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:8192 -aes128 -pass stdin -out markus@mjott.pem
 openssl rsa -outform pem -pubout -in markus@mjott.pem 
 openssl rsa -outform pem -aes128 -passout stdin -in markus@mjott.pem
@@ -68,7 +69,7 @@ CREATE TABLE "keys" (
 	`private_key`	TEXT NOT NULL,
 	FOREIGN KEY(`userid`) REFERENCES users ( id )
 )
-
+```
 Migration
 ---------
 
